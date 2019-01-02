@@ -157,18 +157,29 @@ if(fabsf(Xw)>0.1){
 			if(e_sum<-100.0) e_sum=-100.0;
 
 			u = kp*e + ki*e_sum + kd*(e - e_last); //PID
-			 if(dystans1<=15){
-				 for(int v = 180; v > 0;v = v - 30)
+			 if(dystans1<=15.0){
+				 int v;
+				 for(v = 180; v > 0;v = v - 30)
 
 				 {
 				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, v);
 				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, v);
 
 				}
+
+				 if((odleglosc1<=15.0) && (odleglosc3>15.0)&& (v ==0)){
+					 if(fabsf(e)>20.0) goto drive;
+					 main_angle = main_angle -90.0;
+
+				 }
 			 }
 			 else{
-
-			if(fabsf(e)<80.0){
+		drive:
+				HAL_GPIO_WritePin(L_ENGINE_1_GPIO_Port, L_ENGINE_1_Pin, RESET);
+				HAL_GPIO_WritePin(L_ENGINE_2_GPIO_Port, L_ENGINE_2_Pin, SET);
+				HAL_GPIO_WritePin(R_ENGINE_1_GPIO_Port, R_ENGINE_1_Pin, SET);
+				HAL_GPIO_WritePin(R_ENGINE_2_GPIO_Port, R_ENGINE_2_Pin, RESET);
+			if(fabsf(e)<20.0){
 				if(e>0){
 			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200);//lewe
 			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200+fabsf(u));//prawe
@@ -177,6 +188,15 @@ if(fabsf(Xw)>0.1){
 			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 200+fabsf(u));
 			__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 200);
 			}
+			}
+
+			if(fabsf(e)>=20.0){
+				HAL_GPIO_WritePin(L_ENGINE_1_GPIO_Port, L_ENGINE_1_Pin, SET);
+				HAL_GPIO_WritePin(L_ENGINE_2_GPIO_Port, L_ENGINE_2_Pin, RESET);
+				HAL_GPIO_WritePin(R_ENGINE_1_GPIO_Port, R_ENGINE_1_Pin, SET);
+				HAL_GPIO_WritePin(R_ENGINE_2_GPIO_Port, R_ENGINE_2_Pin, RESET);
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 400);//lewe
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 400);//prawe
 			}
 
 			/*if(fabs(e)>=80.0){
@@ -393,9 +413,22 @@ int main(void)
 		  	  HAL_I2C_Mem_Read(&hi2c1, LSM6DS33_gyro_adress, LSM6DS33_OUTX_L_G, 1, &DataX2, 1 ,10);
 		  	  Xaxis = (DataX1 << 8) + DataX2 - 1260;
 		  	  Xw= Xaxis*125.0/(float)INT16_MAX/8;
-
-
-
+		/*  if(left ==1){
+		  	while(angle>=-90.0){
+				HAL_GPIO_WritePin(L_ENGINE_1_GPIO_Port, L_ENGINE_1_Pin, SET);
+				HAL_GPIO_WritePin(L_ENGINE_2_GPIO_Port, L_ENGINE_2_Pin, RESET);
+				HAL_GPIO_WritePin(R_ENGINE_1_GPIO_Port, R_ENGINE_1_Pin, SET);
+				HAL_GPIO_WritePin(R_ENGINE_2_GPIO_Port, R_ENGINE_2_Pin, RESET);
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, 400);//lewe
+				__HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_2, 400);//prawe
+				angle=angle + Xw*0.01;
+			}
+		  	if(angle<=-90.0) {
+		  		angle = 0.0;
+		  		left =0;
+		  	}
+		  }
+*/
 		  	 /* if(fabsf(e)<20.0) pomiary=1;
 
 		  	  if(forward==0 && left==1){
